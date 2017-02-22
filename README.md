@@ -1,3 +1,3 @@
 # goauth
 
-Golang lib to facilitate authenticate.
+Golang lib to facilitate authenticating of communication peers.
