@@ -257,7 +257,7 @@ func TestRsaDecryptBlock_PKCSv15(t *testing.T) {
 	f_test := func(bits int, plain []byte, bsize int) {
 		maxn := (bits+7)/8 - 11
 		fmt.Printf("bits[%d], maxn[%d], len(plain)[%d], bsize[%d]\n", bits, maxn, len(plain), bsize)
-		
+
 		privGen, _, err := RsaPrivateKeyGeneration(bits)
 		if err != nil {
 			t.Fatalf("key generate failed")
@@ -282,7 +282,7 @@ func TestRsaDecryptBlock_PKCSv15(t *testing.T) {
 	f_test(256, f_genBytes(666), 21)
 	f_test(256, f_genBytes(666), 1)
 	f_test(256, f_genBytes(666), 12)
-	
+
 	f_test(512, f_genBytes(1666), 35)
 	f_test(1024, f_genBytes(3666), 57)
 	f_test(2048, f_genBytes(666), 245)
