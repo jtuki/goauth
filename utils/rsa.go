@@ -12,6 +12,7 @@ import (
 
 const (
 	PEM_BLOCK_TYPE_RSA_PRIV = "RSA PRIVATE KEY"
+	PEM_BLOCK_TYPE_RSA_PUB  = "PUBLIC KEY"
 )
 
 // RsaPrivateKeyGeneration 根据指定的 bits 长度（如 256/1024/2048 等）生成私钥、公钥的对象。
@@ -101,6 +102,38 @@ func RsaPrivateKeyDecodeFromPEM(pemBlockBytes []byte, pwd string) (*rsa.PrivateK
 	}
 
 	return priv, &priv.PublicKey, nil
+}
+
+// RsaPublicKeyEncodeToPEM 将公钥信息编码成 PEM 格式编码的字节序列。
+func RsaPublicKeyEncodeToPEM(pub *rsa.PublicKey) ([]byte, error) {
+	derBytes, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return nil, err
+	}
+
+	return pem.EncodeToMemory(&pem.Block{
+		Type:  PEM_BLOCK_TYPE_RSA_PUB,
+		Bytes: derBytes,
+	}), nil
+}
+
+// RsaPublicKeyDecodeFromPEM 从公钥信息对应的 PEM 中解码出公钥信息。
+func RsaPublicKeyDecodeFromPEM(pemBlockBytes []byte) (*rsa.PublicKey, error) {
+	pb, _ := pem.Decode(pemBlockBytes)
+	if pb == nil {
+		return nil, errors.New("decode PEM block failed")
+	}
+
+	if pb.Type != PEM_BLOCK_TYPE_RSA_PUB {
+		return nil, errors.New(fmt.Sprintf("invalid PEM block type[%s]", pb.Type))
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(pb.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return pub.(*rsa.PublicKey), nil
 }
 
 // RsaPrivateKeyEqual 判定两个 PrivateKey 对象是否相等。

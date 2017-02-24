@@ -2,10 +2,9 @@ package utils
 
 import (
 	"bytes"
-	"crypto/rand"
 	"crypto/rsa"
-	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -156,6 +155,80 @@ func TestRsaPrivateKeyDecodeFromPEM(t *testing.T) {
 	f_test(1024, "")
 }
 
+// encode to and decode from PEM
+func TestRsaPublicKeyPEM(t *testing.T) {
+	const (
+		examplePrivPEM = `
+-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAlzCD0hf0s/jFRshkfSvKLb1X4mEmizknrZwu5XLUc70v1L6V
+3ImKPc54QOWc4kKdHIvpVNJ2QdhHeXit0LQgAWJmiayBu4RCNkX70WJ4yTuKbZPb
+3/C0+pBSPhNeWKwaUrZWbDAv6WGKrb/cnWi21ooluxvZze9MvLuFBieLqi3k8y9E
+qmKGWrROXg8FH9/QlzLCoFmu1GUnVPqIz9bEWBWfgjXdkUaaJ82kADdpURmYgsWS
+rp4wPzjfrEaN7H4eztPMqA9eizoeZ0nGJ72WqfmL6XayBmC1Tg6cPWtC2NF1pBYy
+NJ3DwC3gzLG7naOcW7WXNFchP/XHdtnqiEDFewIDAQABAoIBAFyaRZNQQvxcuhBh
+u1MDmEEtwP+Se7Y4mrn2eK7nB4OgdAR9e3Lp93dl2Df/q3jWTj7m31Kp2e74lsar
+CONVAGl4qM9YjtmY56kwck3MX6j5xA7byoe+eksiTI1i9Z2gRDs3HXYEicQLj5Je
+erUbJyn+0Z9qLpy5HqpWvOKJJD1mD90tW73vO+bHE7p/o3pd9AQFzG+2V/rL7gO+
+F6O8JQJxArjT3yN21dJKAPnRh1T5iwSURxZ9PasgVp3EYQOT9HXBya0/BVVxuoHq
+8cn/1P8Bw13v3CwT70KO0zxmHKiqTiJRUDzCmH0Z0BEmn6BQ+gB883P3e3o25Upj
+fYNQV8ECgYEAxdwGzTvTcN9sQAVPMTvmql5ZPNU7DcyYFWoyT9aIQUccQel/QQ3J
+bQ+ybyjaS9QFHAd4PJbe8YjMxG8Z5P/0KCmvJ53sWyo4xvAcCQtMW9K+pe7ALROq
+kIscE2wUtTUSdVvofiWkIeP+uu0gq84d7qxd0bKZB64aWb+GKTcaPOECgYEAw529
+zzXON00ts250wG7DsmZstNs0hMVShvP79F2YNLITk4AXof8D6yZa0gq3+yr+6uNz
+k/mua4mvF1Qw4hejbbv+AcS9EJpZ+60ZA35nRkoXOfxmzLVVZPyCpggeZ71NEWhy
+J/aLPgC5thNcRsXBHWqF+h2QnnQkU6fgNtl70dsCgYBGsCMl87fI3amY/cybNGFm
+gKq1FyEv/uZe0EAFUgn/+F3aFofGQBy0gCUpnZjP+oGQ0AJe8y/Xbx5pF6BStjcO
+mkXfi4ZD08PRHzuE56pyK8q9EZ1K/Xm0hl6Tecu0Ka/cied4Gg6XpRL+yXUgrFT5
+Tk9+eaY+ni7/3XMbCnqvQQKBgFxjnydDqV7zI7eQXrIYXnNe7s7IjVh7/cthZsl2
+fxG8XYSXxhGr6UThu5limJyXJQj5Xjgwf9GomLqy99eBBJ4qYQCi1A0IaaF1ks/U
+nqBTE/8+F6ttpaRpoqcaRIoInWKwauI3DnK9UvkM0dNXSStEiXylBA3imtmr+zjM
+pS9rAoGAFwTWlN0PNVDdnsjsd6euWRjr8RGSfmaGNy/IghvrhEJ0dgMSKPs111Yo
+vKpbOw7X6abkHg2YVzGJJjXe/1olNxg4c1l+GDCb6eRuw+LUaeTcbZwZLlUmVH0e
+GBfiS4qj8OZhUDK024dKhnS6YpRDprjal44r5bzqmk20P7Upm9w=
+-----END RSA PRIVATE KEY-----`
+
+		examplePubPEM = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlzCD0hf0s/jFRshkfSvK
+Lb1X4mEmizknrZwu5XLUc70v1L6V3ImKPc54QOWc4kKdHIvpVNJ2QdhHeXit0LQg
+AWJmiayBu4RCNkX70WJ4yTuKbZPb3/C0+pBSPhNeWKwaUrZWbDAv6WGKrb/cnWi2
+1ooluxvZze9MvLuFBieLqi3k8y9EqmKGWrROXg8FH9/QlzLCoFmu1GUnVPqIz9bE
+WBWfgjXdkUaaJ82kADdpURmYgsWSrp4wPzjfrEaN7H4eztPMqA9eizoeZ0nGJ72W
+qfmL6XayBmC1Tg6cPWtC2NF1pBYyNJ3DwC3gzLG7naOcW7WXNFchP/XHdtnqiEDF
+ewIDAQAB
+-----END PUBLIC KEY-----`
+	)
+
+	priv, _, err := RsaPrivateKeyDecodeFromPEM([]byte(examplePrivPEM), "")
+	if err != nil {
+		t.Fatalf("decode from private key failed")
+	}
+
+	pemPublic, err := RsaPublicKeyEncodeToPEM(&priv.PublicKey)
+	if err != nil {
+		t.Fatalf("encode to pem failed")
+	}
+
+	if strings.Index(string(pemPublic), examplePubPEM) == -1 {
+		fmt.Println(string(pemPublic))
+		t.Fatalf("not equal")
+	}
+
+	// 尝试着进行加密解密操作
+	pubGen, err := RsaPublicKeyDecodeFromPEM([]byte(examplePubPEM))
+	if err != nil {
+		t.Fatalf("decode from pem public key failed")
+	}
+
+	plain := []byte("jflajldfajsdlgjasldfjlajdfoqwealdfjlasjdlajglajflaisjdflaf")
+	cipher, _ := RsaEncrypt_PKCSv15(pubGen, plain)
+
+	plainGen, _ := RsaDecrypt_PKCSv15(priv, cipher)
+
+	if !bytes.Equal(plain, plainGen) {
+		t.Fatal("not equal")
+	}
+}
+
 func TestRsaPrivateKeyBitSize(t *testing.T) {
 	f_test := func(bits int) {
 		priv, _, _ := RsaPrivateKeyGeneration(bits)
@@ -167,123 +240,4 @@ func TestRsaPrivateKeyBitSize(t *testing.T) {
 	f_test(1024)
 	f_test(512)
 	f_test(192)
-}
-
-func f_genBytes(n int) []byte {
-	b := make([]byte, n)
-	rn, err := rand.Read(b)
-	if err != nil || rn != n {
-		return nil
-	}
-	return b
-}
-
-func TestRsaEncrypt_PKCSv15(t *testing.T) {
-	f_test := func(bits int) {
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
-		if err != nil {
-			t.Fatalf("key generate failed")
-		}
-
-		var out1, out2 []byte
-		maxn := (bits+7)/8 - 11
-
-		out1, err = RsaEncrypt_PKCSv15(privGen, f_genBytes(maxn))
-		if err != nil {
-			t.Fatalf("encrypt PKCSv1.5 failed, err[%v]", err)
-		}
-
-		out2, err = RsaEncrypt_PKCSv15(privGen, f_genBytes(maxn))
-		if err != nil {
-			t.Fatalf("encrypt PKCSv1.5 failed, err[%v]", err)
-		}
-
-		// out1 out2 由于加密过程中随机因子的存在，应该不一样
-		if hex.EncodeToString(out1) == hex.EncodeToString(out2) {
-			t.Fatalf("little probability to be the same ...")
-		} else {
-			fmt.Printf("bits[%d], maxn[%d], plainGen[%d], cipher[%d]\n", bits, maxn, maxn, len(out1))
-		}
-
-		_, err = RsaEncrypt_PKCSv15(privGen, f_genBytes(maxn+1))
-		if err == nil {
-			t.Fatalf("encrypt PKCSv1.5 should fail")
-		}
-	}
-
-	f_test(256)
-	f_test(1024)
-	f_test(2048)
-	f_test(2066)
-}
-
-func TestRsaDecrypt_PKCSv15(t *testing.T) {
-	f_test := func(bits int) {
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
-		if err != nil {
-			t.Fatalf("key generate failed")
-		}
-
-		var cipher, plainGen, plainDecrypt []byte
-		maxn := (bits+7)/8 - 11
-
-		// encrypt
-		plainGen = f_genBytes(maxn)
-		cipher, err = RsaEncrypt_PKCSv15(privGen, plainGen)
-		if err != nil {
-			t.Fatalf("encrypt PKCSv1.5 failed, err[%v]", err)
-		}
-
-		// decrypt
-		plainDecrypt, err = RsaDecrypt_PKCSv15(privGen, cipher)
-		if err != nil {
-			t.Fatalf("decrypt PKCSv1.5 failed, err[%v]", err)
-		}
-
-		if !bytes.Equal(plainGen, plainDecrypt) {
-			t.Fatalf("not the same")
-		} else {
-			fmt.Printf("bits[%d], maxn[%d], plainGen[%d], cipher[%d]\n", bits, maxn, len(plainGen), len(cipher))
-		}
-	}
-
-	f_test(256)
-	f_test(512)
-	f_test(1024)
-	f_test(1066)
-}
-
-func TestRsaDecryptBlock_PKCSv15(t *testing.T) {
-	f_test := func(bits int, plain []byte, bsize int) {
-		maxn := (bits+7)/8 - 11
-		fmt.Printf("bits[%d], maxn[%d], len(plain)[%d], bsize[%d]\n", bits, maxn, len(plain), bsize)
-
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
-		if err != nil {
-			t.Fatalf("key generate failed")
-		}
-
-		cipher, err := RsaEncryptBlock_PKCSv15(privGen, plain, bsize)
-		if err != nil {
-			t.Fatalf("block encrypt failed, err[%v]", err)
-		}
-
-		plainDecrypt, err := RsaDecryptBlock_PKCSv15(privGen, cipher)
-		if err != nil {
-			t.Fatalf("block decrypt failed, err[%v]", err)
-		}
-
-		if !bytes.Equal(plain, plainDecrypt) {
-			t.Fatalf("not equal")
-		}
-	}
-
-	f_test(256, f_genBytes(6), 21)
-	f_test(256, f_genBytes(666), 21)
-	f_test(256, f_genBytes(666), 1)
-	f_test(256, f_genBytes(666), 12)
-
-	f_test(512, f_genBytes(1666), 35)
-	f_test(1024, f_genBytes(3666), 57)
-	f_test(2048, f_genBytes(666), 245)
 }
