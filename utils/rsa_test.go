@@ -158,43 +158,21 @@ func TestRsaPrivateKeyDecodeFromPEM(t *testing.T) {
 // encode to and decode from PEM
 func TestRsaPublicKeyPEM(t *testing.T) {
 	const (
-		examplePrivPEM = `
------BEGIN RSA PRIVATE KEY-----
-MIIEogIBAAKCAQEAlzCD0hf0s/jFRshkfSvKLb1X4mEmizknrZwu5XLUc70v1L6V
-3ImKPc54QOWc4kKdHIvpVNJ2QdhHeXit0LQgAWJmiayBu4RCNkX70WJ4yTuKbZPb
-3/C0+pBSPhNeWKwaUrZWbDAv6WGKrb/cnWi21ooluxvZze9MvLuFBieLqi3k8y9E
-qmKGWrROXg8FH9/QlzLCoFmu1GUnVPqIz9bEWBWfgjXdkUaaJ82kADdpURmYgsWS
-rp4wPzjfrEaN7H4eztPMqA9eizoeZ0nGJ72WqfmL6XayBmC1Tg6cPWtC2NF1pBYy
-NJ3DwC3gzLG7naOcW7WXNFchP/XHdtnqiEDFewIDAQABAoIBAFyaRZNQQvxcuhBh
-u1MDmEEtwP+Se7Y4mrn2eK7nB4OgdAR9e3Lp93dl2Df/q3jWTj7m31Kp2e74lsar
-CONVAGl4qM9YjtmY56kwck3MX6j5xA7byoe+eksiTI1i9Z2gRDs3HXYEicQLj5Je
-erUbJyn+0Z9qLpy5HqpWvOKJJD1mD90tW73vO+bHE7p/o3pd9AQFzG+2V/rL7gO+
-F6O8JQJxArjT3yN21dJKAPnRh1T5iwSURxZ9PasgVp3EYQOT9HXBya0/BVVxuoHq
-8cn/1P8Bw13v3CwT70KO0zxmHKiqTiJRUDzCmH0Z0BEmn6BQ+gB883P3e3o25Upj
-fYNQV8ECgYEAxdwGzTvTcN9sQAVPMTvmql5ZPNU7DcyYFWoyT9aIQUccQel/QQ3J
-bQ+ybyjaS9QFHAd4PJbe8YjMxG8Z5P/0KCmvJ53sWyo4xvAcCQtMW9K+pe7ALROq
-kIscE2wUtTUSdVvofiWkIeP+uu0gq84d7qxd0bKZB64aWb+GKTcaPOECgYEAw529
-zzXON00ts250wG7DsmZstNs0hMVShvP79F2YNLITk4AXof8D6yZa0gq3+yr+6uNz
-k/mua4mvF1Qw4hejbbv+AcS9EJpZ+60ZA35nRkoXOfxmzLVVZPyCpggeZ71NEWhy
-J/aLPgC5thNcRsXBHWqF+h2QnnQkU6fgNtl70dsCgYBGsCMl87fI3amY/cybNGFm
-gKq1FyEv/uZe0EAFUgn/+F3aFofGQBy0gCUpnZjP+oGQ0AJe8y/Xbx5pF6BStjcO
-mkXfi4ZD08PRHzuE56pyK8q9EZ1K/Xm0hl6Tecu0Ka/cied4Gg6XpRL+yXUgrFT5
-Tk9+eaY+ni7/3XMbCnqvQQKBgFxjnydDqV7zI7eQXrIYXnNe7s7IjVh7/cthZsl2
-fxG8XYSXxhGr6UThu5limJyXJQj5Xjgwf9GomLqy99eBBJ4qYQCi1A0IaaF1ks/U
-nqBTE/8+F6ttpaRpoqcaRIoInWKwauI3DnK9UvkM0dNXSStEiXylBA3imtmr+zjM
-pS9rAoGAFwTWlN0PNVDdnsjsd6euWRjr8RGSfmaGNy/IghvrhEJ0dgMSKPs111Yo
-vKpbOw7X6abkHg2YVzGJJjXe/1olNxg4c1l+GDCb6eRuw+LUaeTcbZwZLlUmVH0e
-GBfiS4qj8OZhUDK024dKhnS6YpRDprjal44r5bzqmk20P7Upm9w=
+		// openssl genrsa -out private.pem 512
+		examplePrivPEM = `-----BEGIN RSA PRIVATE KEY-----
+MIIBOgIBAAJBALYGcL/naWtMnq6n6AKoRWfAmeyoVKe7PDe3fR4S1c6qZTbbHNWD
+k9SeqdJZ5g3YPU3PVC7a0Egz4A3a2Cod8LsCAwEAAQJAaPtR7/xhmpb4Njd04oN2
+dB5rKEj1ej/MvT3AlaW7VpOK0uZS7NGuyVTXm52xTBrJaZU/QuxsvKPmUm42Y50O
+0QIhAODYCVFAVuZR3x3taI4YNTvY0MzbEfT/pQfSVUTOSqGFAiEAzz97BdJJ3xTC
+fjk+CHmLSlt/LgvmVZSLhPp8PLHNvT8CIQDNN2EJr9eg0Aj8n7tWNfIgdXvd/fUd
+0FcoFGmPK1oioQIgN3uOKtPOVPuQygv3EHvBj4mJNcGXy2d2JoaMhg8vvi8CIA4l
+Q8+9vxL3DqsC26N0/2vZAp8mTEWgH+VXbOtmiM52
 -----END RSA PRIVATE KEY-----`
 
+		// openssl rsa -in private.pem -pubout -out public.pem
 		examplePubPEM = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlzCD0hf0s/jFRshkfSvK
-Lb1X4mEmizknrZwu5XLUc70v1L6V3ImKPc54QOWc4kKdHIvpVNJ2QdhHeXit0LQg
-AWJmiayBu4RCNkX70WJ4yTuKbZPb3/C0+pBSPhNeWKwaUrZWbDAv6WGKrb/cnWi2
-1ooluxvZze9MvLuFBieLqi3k8y9EqmKGWrROXg8FH9/QlzLCoFmu1GUnVPqIz9bE
-WBWfgjXdkUaaJ82kADdpURmYgsWSrp4wPzjfrEaN7H4eztPMqA9eizoeZ0nGJ72W
-qfmL6XayBmC1Tg6cPWtC2NF1pBYyNJ3DwC3gzLG7naOcW7WXNFchP/XHdtnqiEDF
-ewIDAQAB
+MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALYGcL/naWtMnq6n6AKoRWfAmeyoVKe7
+PDe3fR4S1c6qZTbbHNWDk9SeqdJZ5g3YPU3PVC7a0Egz4A3a2Cod8LsCAwEAAQ==
 -----END PUBLIC KEY-----`
 	)
 
@@ -219,12 +197,19 @@ ewIDAQAB
 		t.Fatalf("decode from pem public key failed")
 	}
 
-	plain := []byte("jflajldfajsdlgjasldfjlajdfoqwealdfjlasjdlajglajflaisjdflaf")
-	cipher, _ := RsaEncrypt_PKCSv15(pubGen, plain)
+	plain := []byte("jflajldfajsdlgjaslasdfadgad")
+	cipher, err := RsaEncrypt_PKCSv15(pubGen, plain)
+	if err != nil {
+		t.Fatalf("encrypt to cipher failed, err[%v]", err)
+	}
 
-	plainGen, _ := RsaDecrypt_PKCSv15(priv, cipher)
+	plainGen, err := RsaDecrypt_PKCSv15(priv, cipher)
+	if err != nil {
+		t.Fatalf("decrypt to plainGen failed")
+	}
 
 	if !bytes.Equal(plain, plainGen) {
+		fmt.Println(string(plainGen))
 		t.Fatal("not equal")
 	}
 }
