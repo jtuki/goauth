@@ -1,4 +1,4 @@
-package utils
+package rsa_auth
 
 import (
 	"crypto/rand"
@@ -15,8 +15,8 @@ const (
 	PEM_BLOCK_TYPE_RSA_PUB  = "PUBLIC KEY"
 )
 
-// RsaPrivateKeyGeneration 根据指定的 bits 长度（如 256/1024/2048 等）生成私钥、公钥的对象。
-func RsaPrivateKeyGeneration(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+// GenKey 根据指定的 bits 长度（如 256/1024/2048 等）生成私钥、公钥的对象。
+func GenKey(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return nil, nil, err
@@ -24,7 +24,7 @@ func RsaPrivateKeyGeneration(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) 
 	return priv, &priv.PublicKey, nil
 }
 
-// RsaPrivateKeyEncodeToPEM 将指定的私钥对象 priv 按照指定的密码 pwd 生成密码保护的 pem 编码字节内容。
+// EncodePrivToPEM 将指定的私钥对象 priv 按照指定的密码 pwd 生成密码保护的 pem 编码字节内容。
 //
 // 编码之后的结果：
 //      -----BEGIN Type-----
@@ -47,7 +47,7 @@ func RsaPrivateKeyGeneration(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) 
 // Note:
 //      1. http://stackoverflow.com/questions/37316370/how-create-rsa-private-key-with-passphrase-in-golang
 //      2. 如果无需进行加密处理，pwd 为空即可。
-func RsaPrivateKeyEncodeToPEM(priv *rsa.PrivateKey, pwd string) ([]byte, error) {
+func EncodePrivToPEM(priv *rsa.PrivateKey, pwd string) ([]byte, error) {
 	var block *pem.Block
 	block = &pem.Block{
 		Type:  PEM_BLOCK_TYPE_RSA_PRIV,
@@ -66,7 +66,7 @@ func RsaPrivateKeyEncodeToPEM(priv *rsa.PrivateKey, pwd string) ([]byte, error) 
 	return pem.EncodeToMemory(block), nil
 }
 
-// RsaPrivateKeyDecodeFromPEM 通过 PEM 编码字节内容 pemBlockBytes，生成私钥对象。如果没有密码，则 pwd 为空字符串。
+// DecodePrivFromPEM 通过 PEM 编码字节内容 pemBlockBytes，生成私钥对象。如果没有密码，则 pwd 为空字符串。
 // eg.
 //      -----BEGIN RSA PRIVATE KEY-----
 //      Proc-Type: 4,ENCRYPTED
@@ -77,7 +77,7 @@ func RsaPrivateKeyEncodeToPEM(priv *rsa.PrivateKey, pwd string) ([]byte, error) 
 //      t+XMGPsxvQ/IzcqnbFr8HnT5kUjnJnvRBvMlkSCTZkoSvHLZQypI833a4veUBLGP
 //      xmH13k/U6Tf3Y/ENLPVh1jc/asKUN7kbBhtxg1wT1m4=
 //      -----END RSA PRIVATE KEY-----
-func RsaPrivateKeyDecodeFromPEM(pemBlockBytes []byte, pwd string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+func DecodePrivFromPEM(pemBlockBytes []byte, pwd string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	pb, _ := pem.Decode(pemBlockBytes)
 	if pb == nil {
 		return nil, nil, errors.New("decode PEM block failed")
@@ -104,8 +104,8 @@ func RsaPrivateKeyDecodeFromPEM(pemBlockBytes []byte, pwd string) (*rsa.PrivateK
 	return priv, &priv.PublicKey, nil
 }
 
-// RsaPublicKeyEncodeToPEM 将公钥信息编码成 PEM 格式编码的字节序列。
-func RsaPublicKeyEncodeToPEM(pub *rsa.PublicKey) ([]byte, error) {
+// EncodePubToPEM 将公钥信息编码成 PEM 格式编码的字节序列。
+func EncodePubToPEM(pub *rsa.PublicKey) ([]byte, error) {
 	derBytes, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
 		return nil, err
@@ -117,8 +117,8 @@ func RsaPublicKeyEncodeToPEM(pub *rsa.PublicKey) ([]byte, error) {
 	}), nil
 }
 
-// RsaPublicKeyDecodeFromPEM 从公钥信息对应的 PEM 中解码出公钥信息。
-func RsaPublicKeyDecodeFromPEM(pemBlockBytes []byte) (*rsa.PublicKey, error) {
+// DecodePubFromPEM 从公钥信息对应的 PEM 中解码出公钥信息。
+func DecodePubFromPEM(pemBlockBytes []byte) (*rsa.PublicKey, error) {
 	pb, _ := pem.Decode(pemBlockBytes)
 	if pb == nil {
 		return nil, errors.New("decode PEM block failed")
@@ -136,8 +136,8 @@ func RsaPublicKeyDecodeFromPEM(pemBlockBytes []byte) (*rsa.PublicKey, error) {
 	return pub.(*rsa.PublicKey), nil
 }
 
-// RsaPrivateKeyEqual 判定两个 PrivateKey 对象是否相等。
-func RsaPrivateKeyEqual(priv1, priv2 *rsa.PrivateKey) bool {
+// IsEqualPriv 判定两个 PrivateKey 对象是否相等。
+func IsEqualPriv(priv1, priv2 *rsa.PrivateKey) bool {
 	if priv1.E != priv2.E {
 		return false
 	}
@@ -158,7 +158,7 @@ func RsaPrivateKeyEqual(priv1, priv2 *rsa.PrivateKey) bool {
 	return true
 }
 
-// RsaPrivateKeyBitSize 返回 RSA bit length，如 RSA 256 则返回 256。
-func RsaPrivateKeyBitSize(priv *rsa.PrivateKey) int {
+// PrivKeySize 返回 RSA bit length，如 RSA 256 则返回 256。
+func PrivKeySize(priv *rsa.PrivateKey) int {
 	return priv.N.BitLen()
 }

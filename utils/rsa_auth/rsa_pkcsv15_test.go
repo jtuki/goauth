@@ -1,4 +1,4 @@
-package utils
+package rsa_auth
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ func f_genBytes(n int) []byte {
 
 func TestRsaEncrypt_PKCSv15(t *testing.T) {
 	f_test := func(bits int) {
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
+		privGen, _, err := GenKey(bits)
 		if err != nil {
 			t.Fatalf("key generate failed")
 		}
@@ -27,12 +27,12 @@ func TestRsaEncrypt_PKCSv15(t *testing.T) {
 		var out1, out2 []byte
 		maxn := (bits+7)/8 - 11
 
-		out1, err = RsaEncrypt_PKCSv15(&privGen.PublicKey, f_genBytes(maxn))
+		out1, err = Encrypt_PKCSv15(&privGen.PublicKey, f_genBytes(maxn))
 		if err != nil {
 			t.Fatalf("encrypt PKCSv1.5 failed, err[%v]", err)
 		}
 
-		out2, err = RsaEncrypt_PKCSv15(&privGen.PublicKey, f_genBytes(maxn))
+		out2, err = Encrypt_PKCSv15(&privGen.PublicKey, f_genBytes(maxn))
 		if err != nil {
 			t.Fatalf("encrypt PKCSv1.5 failed, err[%v]", err)
 		}
@@ -44,7 +44,7 @@ func TestRsaEncrypt_PKCSv15(t *testing.T) {
 			fmt.Printf("bits[%d], maxn[%d], plainGen[%d], cipher[%d]\n", bits, maxn, maxn, len(out1))
 		}
 
-		_, err = RsaEncrypt_PKCSv15(&privGen.PublicKey, f_genBytes(maxn+1))
+		_, err = Encrypt_PKCSv15(&privGen.PublicKey, f_genBytes(maxn+1))
 		if err == nil {
 			t.Fatalf("encrypt PKCSv1.5 should fail")
 		}
@@ -58,7 +58,7 @@ func TestRsaEncrypt_PKCSv15(t *testing.T) {
 
 func TestRsaDecrypt_PKCSv15(t *testing.T) {
 	f_test := func(bits int) {
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
+		privGen, _, err := GenKey(bits)
 		if err != nil {
 			t.Fatalf("key generate failed")
 		}
@@ -68,13 +68,13 @@ func TestRsaDecrypt_PKCSv15(t *testing.T) {
 
 		// encrypt
 		plainGen = f_genBytes(maxn)
-		cipher, err = RsaEncrypt_PKCSv15(&privGen.PublicKey, plainGen)
+		cipher, err = Encrypt_PKCSv15(&privGen.PublicKey, plainGen)
 		if err != nil {
 			t.Fatalf("encrypt PKCSv1.5 failed, err[%v]", err)
 		}
 
 		// decrypt
-		plainDecrypt, err = RsaDecrypt_PKCSv15(privGen, cipher)
+		plainDecrypt, err = Decrypt_PKCSv15(privGen, cipher)
 		if err != nil {
 			t.Fatalf("decrypt PKCSv1.5 failed, err[%v]", err)
 		}
@@ -97,17 +97,17 @@ func TestRsaDecryptBlock_PKCSv15(t *testing.T) {
 		maxn := (bits+7)/8 - 11
 		fmt.Printf("bits[%d], maxn[%d], len(plain)[%d], bsize[%d]\n", bits, maxn, len(plain), bsize)
 
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
+		privGen, _, err := GenKey(bits)
 		if err != nil {
 			t.Fatalf("key generate failed")
 		}
 
-		cipher, err := RsaEncryptBlock_PKCSv15(privGen, plain, bsize)
+		cipher, err := EncryptBlock_PKCSv15(privGen, plain, bsize)
 		if err != nil {
 			t.Fatalf("block encrypt failed, err[%v]", err)
 		}
 
-		plainDecrypt, err := RsaDecryptBlock_PKCSv15(privGen, cipher)
+		plainDecrypt, err := DecryptBlock_PKCSv15(privGen, cipher)
 		if err != nil {
 			t.Fatalf("block decrypt failed, err[%v]", err)
 		}

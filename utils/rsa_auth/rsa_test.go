@@ -1,4 +1,4 @@
-package utils
+package rsa_auth
 
 import (
 	"bytes"
@@ -13,21 +13,21 @@ func TestRsaPrivateKeyGeneration(t *testing.T) {
 	var pub *rsa.PublicKey
 	var err error
 
-	priv, pub, err = RsaPrivateKeyGeneration(256)
+	priv, pub, err = GenKey(256)
 	if err != nil {
 		t.Fatalf("key generate failed")
 	}
 	fmt.Println(*priv)
 	fmt.Println(*pub)
 
-	priv, pub, err = RsaPrivateKeyGeneration(1024)
+	priv, pub, err = GenKey(1024)
 	if err != nil {
 		t.Fatalf("key generate failed")
 	}
 	fmt.Println(*priv)
 	fmt.Println(*pub)
 
-	priv, pub, err = RsaPrivateKeyGeneration(2048)
+	priv, pub, err = GenKey(2048)
 	if err != nil {
 		t.Fatalf("key generate failed")
 	}
@@ -42,12 +42,12 @@ func TestRsaPrivateKeyEncodeToPEM(t *testing.T) {
 
 		fmt.Printf("* bits[%d], pwd[%s]\n", bits, pwd)
 
-		priv, _, err = RsaPrivateKeyGeneration(bits)
+		priv, _, err = GenKey(bits)
 		if err != nil {
 			t.Fatalf("key generate failed")
 		}
 
-		pemBytes, err := RsaPrivateKeyEncodeToPEM(priv, pwd)
+		pemBytes, err := EncodePrivToPEM(priv, pwd)
 		if err != nil {
 			t.Fatalf("generate pem failed")
 		}
@@ -63,9 +63,9 @@ func TestRsaPrivateKeyEncodeToPEM(t *testing.T) {
 
 func TestRsaPrivateKeyEqual(t *testing.T) {
 	// 两个随机生成的 privateKey 对象，不应该相同
-	privGen1, _, _ := RsaPrivateKeyGeneration(512)
-	privGen2, _, _ := RsaPrivateKeyGeneration(512)
-	if RsaPrivateKeyEqual(privGen1, privGen2) {
+	privGen1, _, _ := GenKey(512)
+	privGen2, _, _ := GenKey(512)
+	if IsEqualPriv(privGen1, privGen2) {
 		t.Fatalf("should not be equal")
 	}
 
@@ -114,37 +114,37 @@ B45YrXa1TEROBapQgwFej25VZGGDjpG7y6w1DPP72+8=
 
 	var err1, err2 error
 
-	privGen1, _, err1 = RsaPrivateKeyDecodeFromPEM([]byte(pemBlock1), pemBlock1Password)
-	privGen2, _, err2 = RsaPrivateKeyDecodeFromPEM([]byte(pemBlock1), pemBlock1Password)
-	if err1 != nil || err2 != nil || !RsaPrivateKeyEqual(privGen1, privGen2) {
+	privGen1, _, err1 = DecodePrivFromPEM([]byte(pemBlock1), pemBlock1Password)
+	privGen2, _, err2 = DecodePrivFromPEM([]byte(pemBlock1), pemBlock1Password)
+	if err1 != nil || err2 != nil || !IsEqualPriv(privGen1, privGen2) {
 		t.Fatalf("should be equal; err1[%v], err2[%v]", err1, err2)
 	}
 
-	privGen1, _, _ = RsaPrivateKeyDecodeFromPEM([]byte(pemBlock2), pemBlock2Password)
-	privGen2, _, _ = RsaPrivateKeyDecodeFromPEM([]byte(pemBlock2), pemBlock2Password)
-	if err1 != nil || err2 != nil || !RsaPrivateKeyEqual(privGen1, privGen2) {
+	privGen1, _, _ = DecodePrivFromPEM([]byte(pemBlock2), pemBlock2Password)
+	privGen2, _, _ = DecodePrivFromPEM([]byte(pemBlock2), pemBlock2Password)
+	if err1 != nil || err2 != nil || !IsEqualPriv(privGen1, privGen2) {
 		t.Fatalf("should be equal; err1[%v], err2[%v]", err1, err2)
 	}
 }
 
 func TestRsaPrivateKeyDecodeFromPEM(t *testing.T) {
 	f_test := func(bits int, pwd string) {
-		privGen, _, err := RsaPrivateKeyGeneration(bits)
+		privGen, _, err := GenKey(bits)
 		if err != nil {
 			t.Fatalf("key generate failed")
 		}
 
-		pemBytes1, err := RsaPrivateKeyEncodeToPEM(privGen, pwd)
+		pemBytes1, err := EncodePrivToPEM(privGen, pwd)
 		if err != nil {
 			t.Fatalf("encode to PEM failed")
 		}
 
-		privDecoded, _, err := RsaPrivateKeyDecodeFromPEM(pemBytes1, pwd)
+		privDecoded, _, err := DecodePrivFromPEM(pemBytes1, pwd)
 		if err != nil {
 			t.Fatalf("decode from PEM failed")
 		}
 
-		if !RsaPrivateKeyEqual(privGen, privDecoded) {
+		if !IsEqualPriv(privGen, privDecoded) {
 			t.Fatalf("pem not equal")
 		}
 	}
@@ -176,12 +176,12 @@ PDe3fR4S1c6qZTbbHNWDk9SeqdJZ5g3YPU3PVC7a0Egz4A3a2Cod8LsCAwEAAQ==
 -----END PUBLIC KEY-----`
 	)
 
-	priv, _, err := RsaPrivateKeyDecodeFromPEM([]byte(examplePrivPEM), "")
+	priv, _, err := DecodePrivFromPEM([]byte(examplePrivPEM), "")
 	if err != nil {
 		t.Fatalf("decode from private key failed")
 	}
 
-	pemPublic, err := RsaPublicKeyEncodeToPEM(&priv.PublicKey)
+	pemPublic, err := EncodePubToPEM(&priv.PublicKey)
 	if err != nil {
 		t.Fatalf("encode to pem failed")
 	}
@@ -192,18 +192,18 @@ PDe3fR4S1c6qZTbbHNWDk9SeqdJZ5g3YPU3PVC7a0Egz4A3a2Cod8LsCAwEAAQ==
 	}
 
 	// 尝试着进行加密解密操作
-	pubGen, err := RsaPublicKeyDecodeFromPEM([]byte(examplePubPEM))
+	pubGen, err := DecodePubFromPEM([]byte(examplePubPEM))
 	if err != nil {
 		t.Fatalf("decode from pem public key failed")
 	}
 
 	plain := []byte("jflajldfajsdlgjaslasdfadgad")
-	cipher, err := RsaEncrypt_PKCSv15(pubGen, plain)
+	cipher, err := Encrypt_PKCSv15(pubGen, plain)
 	if err != nil {
 		t.Fatalf("encrypt to cipher failed, err[%v]", err)
 	}
 
-	plainGen, err := RsaDecrypt_PKCSv15(priv, cipher)
+	plainGen, err := Decrypt_PKCSv15(priv, cipher)
 	if err != nil {
 		t.Fatalf("decrypt to plainGen failed")
 	}
@@ -216,8 +216,8 @@ PDe3fR4S1c6qZTbbHNWDk9SeqdJZ5g3YPU3PVC7a0Egz4A3a2Cod8LsCAwEAAQ==
 
 func TestRsaPrivateKeyBitSize(t *testing.T) {
 	f_test := func(bits int) {
-		priv, _, _ := RsaPrivateKeyGeneration(bits)
-		if RsaPrivateKeyBitSize(priv) != bits {
+		priv, _, _ := GenKey(bits)
+		if PrivKeySize(priv) != bits {
 			t.Fatalf("inequal")
 		}
 	}
